@@ -1,0 +1,3 @@
+rootProject.name = 'gRPC Hands-on'
+include 'com.grpc.handson'
+

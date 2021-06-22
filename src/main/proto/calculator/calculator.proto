@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+
+package calculator;
+
+option java_package = "com.proto.calculator";
+option java_multiple_files = true;
+
+message Calculator{
+  int32 num_1 = 1;
+  int32 num_2 = 2;
+}
+
+message CalculatorRequest{
+  Calculator calculator = 1;
+}
+
+message CalculatorResponse {
+  int32 sum = 1;
+}
+
+message PrimeNumberDecompositionRequest{
+  int32 number = 1;
+}
+message PrimeNumberDecompositionResponse{
+  int32 prime_factor = 1;
+}
+
+message ComputeAverageRequest{
+  int32 number = 1;
+}
+
+message ComputeAverageResponse{
+  double average = 1;
+}
+
+message FindMaximumRequest{
+  int32 number = 1;
+}
+message FindMaximumResponse{
+  int32 maximum = 1;
+}
+
+
+service CalculatorService {
+  // Unary
+  rpc Calculator(CalculatorRequest) returns (CalculatorResponse) {};
+  // Server Streaming
+  rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+  // Client Streaming
+  rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {} ;
+  // Bi-Directional Streaming
+  rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {};
+}
