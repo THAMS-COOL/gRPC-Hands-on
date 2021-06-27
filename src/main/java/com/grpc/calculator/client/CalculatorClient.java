@@ -1,9 +1,10 @@
 package com.grpc.calculator.client;
 
-import com.grpc.greeting.client.GreetingClient;
+
 import com.proto.calculator.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -21,18 +22,19 @@ public class CalculatorClient {
                 .usePlaintext()
                 .build();
 
-//        doUnaryCall(channel);
+        doUnaryCall(channel);
 
-//        doServerStreamingCall(channel);
+        doServerStreamingCall(channel);
 
-//          doClientStreamingCall(channel);
+        doClientStreamingCall(channel);
 
-          doBiDiStreamingCall(channel);
+        doBiDiStreamingCall(channel);
+
+        doErrorCall(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
     }
-
 
     private void doUnaryCall(ManagedChannel channel) {
         CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient =
@@ -57,12 +59,12 @@ public class CalculatorClient {
     private void doServerStreamingCall(ManagedChannel channel) {
         CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient =
                 CalculatorServiceGrpc.newBlockingStub(channel);
-        Integer number = 567890;
+        int number = 567890;
         calculatorClient.primeNumberDecomposition(PrimeNumberDecompositionRequest.newBuilder()
                 .setNumber(number).build())
-                .forEachRemaining(PrimeNumberDecompositionResponse ->{
-                    System.out.println(PrimeNumberDecompositionResponse.getPrimeFactor());
-                });
+                .forEachRemaining(PrimeNumberDecompositionResponse ->
+                    System.out.println(PrimeNumberDecompositionResponse.getPrimeFactor())
+                );
 
     }
 
@@ -72,7 +74,7 @@ public class CalculatorClient {
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        StreamObserver<ComputeAverageRequest> requestObserver = asyncClient.computeAverage(new StreamObserver<ComputeAverageResponse>() {
+        StreamObserver<ComputeAverageRequest> requestObserver = asyncClient.computeAverage(new StreamObserver<>() {
             @Override
             public void onNext(ComputeAverageResponse value) {
                 System.out.println("Received a response from the server");
@@ -138,7 +140,7 @@ public class CalculatorClient {
         CountDownLatch latch = new CountDownLatch(1);
 
 
-        StreamObserver<FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
+        StreamObserver<FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<>() {
             @Override
             public void onNext(FindMaximumResponse value) {
                 System.out.println("Got new maximum from Server: " + value.getMaximum());
@@ -179,4 +181,23 @@ public class CalculatorClient {
         }
 
     }
+
+
+    private void doErrorCall(ManagedChannel channel) {
+        CalculatorServiceGrpc.CalculatorServiceBlockingStub blockingStub =
+                CalculatorServiceGrpc.newBlockingStub(channel);
+        int number = -1;
+
+        try {
+            blockingStub.squareRoot(SquareRootRequest.newBuilder()
+                    .setNumber(number)
+                    .build());
+        } catch (StatusRuntimeException e) {
+            System.out.println("Got an exception for square root!");
+            e.printStackTrace();
+        }
+
+
+    }
+
 }

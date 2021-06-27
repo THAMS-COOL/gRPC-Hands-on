@@ -1,12 +1,13 @@
 package com.grpc.calculator.server;
 
 import com.proto.calculator.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServiceImplBase {
     @Override
     public void calculator(CalculatorRequest request, StreamObserver<CalculatorResponse> responseObserver) {
-     //   super.calculator(request, responseObserver);
+
         Calculator calculator = request.getCalculator();
         int num_1 = calculator.getNum1();
         int num_2 = calculator.getNum2();
@@ -24,8 +25,8 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
 
     @Override
     public void primeNumberDecomposition(PrimeNumberDecompositionRequest request, StreamObserver<PrimeNumberDecompositionResponse> responseObserver) {
-        Integer number = request.getNumber();
-        Integer divisor = 2;
+        int number = request.getNumber();
+        int divisor = 2;
 
         while (number > 1) {
             if (number % divisor == 0) {
@@ -43,7 +44,7 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
 
     @Override
     public StreamObserver<ComputeAverageRequest> computeAverage(StreamObserver<ComputeAverageResponse> responseObserver) {
-        return new StreamObserver<ComputeAverageRequest>() {
+        return new StreamObserver<>() {
             double average;
             int sum =0 ;
             int count = 0;
@@ -64,7 +65,7 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
 
             @Override
             public void onCompleted() {
-                average = sum /count;
+                average = (double)sum /count;
                 System.out.println("Average: " + average);
                     responseObserver.onNext(
                             ComputeAverageResponse.newBuilder()
@@ -78,7 +79,7 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
 
     @Override
     public StreamObserver<FindMaximumRequest> findMaximum(StreamObserver<FindMaximumResponse> responseObserver) {
-        return new StreamObserver<FindMaximumRequest>() {
+        return new StreamObserver<>() {
             int currentMaximum = 0;
             @Override
             public void onNext(FindMaximumRequest value) {
@@ -112,5 +113,30 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
                 responseObserver.onCompleted();
             }
         };
+    }
+
+    @Override
+    public void squareRoot(SquareRootRequest request, StreamObserver<SquareRootResponse> responseObserver) {
+
+        int number = request.getNumber();
+
+        if (number >= 0) {
+            double numberRoot = Math.sqrt(number);
+            responseObserver.onNext(
+                    SquareRootResponse.newBuilder()
+                            .setNumberRoot(numberRoot)
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } else {
+            // we construct the exception
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("The number being sent is not positive")
+                            .augmentDescription("Number sent: " + number)
+                            .asRuntimeException()
+            );
+        }
+
     }
 }
