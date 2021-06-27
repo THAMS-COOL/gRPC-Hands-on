@@ -1,6 +1,7 @@
 package com.grpc.greeting.server;
 
 import com.proto.greet.*;
+import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 
 public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
@@ -44,34 +45,6 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
             responseObserver.onCompleted();
         }
     }
-
-    /*@Override
-    public StreamObserver<LongGreetRequest> longGreet(StreamObserver<LongGreetResponse> responseObserver) {
-        StreamObserver<LongGreetRequest> requestObserver  = new StreamObserver<>() {
-            String result = "" ;
-            @Override
-            public void onNext(LongGreetRequest value) {
-                // client sends a message
-                result += "Hello " + value.getGreeting().getFirstName() + "! ";
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                // client sends an error
-            }
-
-            @Override
-            public void onCompleted() {
-                // client is done
-                responseObserver.onNext(
-                        LongGreetResponse.newBuilder().setResult(result).build()
-                );
-                responseObserver.onCompleted();
-                // this is when we want to return a response (responseObserver)
-            }
-        };
-        return requestObserver;
-    }*/
 
     @Override
     public StreamObserver<LongGreetRequest> longGreet(StreamObserver<LongGreetResponse> responseObserver) {
@@ -131,5 +104,35 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
                 responseObserver.onCompleted();
             }
         };
+    }
+
+    @Override
+    public void greetWithDeadline(GreetWithDeadlineRequest request, StreamObserver<GreetWithDeadlineResponse> responseObserver) {
+
+        Context current = Context.current(); // it provides a lot of information about the gRPC
+
+        try {
+
+            for (int i = 0; i < 3; i++) {
+                if (!current.isCancelled()) {
+                    System.out.println("sleep for 100 ms");
+                    Thread.sleep(100);
+                } else {
+                    return;
+                }
+            }
+
+            System.out.println("send response");
+            responseObserver.onNext(
+                    GreetWithDeadlineResponse.newBuilder()
+                            .setResult("hello " + request.getGreeting().getFirstName())
+                            .build()
+            );
+
+            responseObserver.onCompleted();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }
